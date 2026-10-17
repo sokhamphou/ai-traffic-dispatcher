@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Traffic Dispatcher | Civic Incident Triage & Command Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+  <!-- TOP NAVIGATION BAR (Always accessible so you & judges can switch fast) -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="showView('landing')">
+        <span class="text-2xl">🚨</span>
+        <div>
+          <h1 class="font-bold text-lg tracking-tight text-white">AI Traffic Dispatcher</h1>
+          <p class="text-xs text-slate-400">An AI-Powered Civic Incident Triage & Command Platform</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="showView('citizen')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
+          📱 Citizen View
+        </button>
+        <button onclick="openAuthorityGate()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30">
+          🚓 Authority Portal
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 1: LANDING SCREEN (Two Big Role Buttons)             -->
+  <!-- ========================================================= -->
+  <main id="view-landing" class="max-w-5xl mx-auto px-6 py-16">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+        Google Cloud Run + Gemini 3.8 Flash Multi-Agent System
+      </span>
+      <h2 class="text-4xl font-extrabold mt-4 text-white">AI Traffic Dispatcher</h2>
+      <p class="text-slate-400 mt-3 text-base">
+        An AI-Powered Civic Incident Triage & Command Platform for Cambodia. Choose your portal below to begin.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      <!-- BUTTON 1: CITIZEN -->
+      <div onclick="showView('citizen')" class="group cursor-pointer rounded-2xl bg-slate-900 border-2 border-slate-800 hover:border-emerald-500/60 p-8 transition-all hover:-translate-y-1 shadow-xl">
+        <div class="w-14 h-14 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-3xl mb-6">
+          📸
+        </div>
+        <h3 class="text-2xl font-bold text-white group-hover:text-emerald-400 transition">Citizen Reporter</h3>
+        <p class="text-slate-400 text-sm mt-2 leading-relaxed">
+          Snap a photo or video of a traffic jam or road accident, record an optional voice note, and pin your GPS location. Our AI Agent automatically routes your report to the local Khan & Sangkat authorities.
+        </p>
+        <div class="mt-6 inline-flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+          Open Citizen Reporter <span>→</span>
+        </div>
+      </div>
+
+      <!-- BUTTON 2: AUTHORITY -->
+      <div onclick="openAuthorityGate()" class="group cursor-pointer rounded-2xl bg-slate-900 border-2 border-slate-800 hover:border-blue-500/60 p-8 transition-all hover:-translate-y-1 shadow-xl">
+        <div class="w-14 h-14 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-3xl mb-6">
+          🚓
+        </div>
+        <h3 class="text-2xl font-bold text-white group-hover:text-blue-400 transition">Authority Command Portal</h3>
+        <p class="text-slate-400 text-sm mt-2 leading-relaxed">
+          Restricted portal for District (Khan) and Commune (Sangkat) Traffic Police. Receive AI-generated Incident Narratives, obstruction metrics, and update real-time scene dispatch status.
+        </p>
+        <div class="mt-6 inline-flex items-center gap-2 text-blue-400 font-semibold text-sm">
+          Sign In to Authority Portal <span>→</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 2: CITIZEN REPORTER (Full Screen)                    -->
+  <!-- ========================================================= -->
+  <section id="view-citizen" class="hidden max-w-2xl mx-auto px-6 py-10">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Citizen Portal</span>
+        <h2 class="text-2xl font-bold text-white">Report a Traffic Jam or Accident</h2>
+      </div>
+      <button onclick="showView('landing')" class="text-xs text-slate-400 hover:text-white">← Back to Home</button>
+    </div>
+
+    <!-- 1-Click Demo Scenarios for Judges -->
+    <div class="mb-6 p-4 rounded-xl bg-slate-900 border border-slate-800">
+      <p class="text-xs font-semibold text-amber-400 mb-2">⚡ Quick Demo Presets (For Fast Evaluation):</p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" onclick="fillDemo('collision')" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700">
+          🏍️ Scenario 1: Russian Blvd Moto Collision
+        </button>
+        <button type="button" onclick="fillDemo('jam')" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700">
+          🚛 Scenario 2: Monivong Blvd Stalled Truck (75% Blocked)
+        </button>
+      </div>
+    </div>
+
+    <form id="citizen-form" onsubmit="submitReport(event)" class="space-y-5 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">1. Upload Scene Photo or Video</label>
+        <input type="file" id="media-input" accept="image/*,video/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer bg-slate-950 rounded-lg border border-slate-800 p-2" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">2. Location / GPS Coordinates</label>
+        <div class="flex gap-2">
+          <input type="text" id="gps-input" required placeholder="e.g., Russian Blvd near RUPP (11.5681, 104.8921)" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white" />
+          <button type="button" onclick="detectGPS()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-semibold border border-slate-700 whitespace-nowrap">
+            📍 Auto-GPS
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-medium text-slate-300">3. Voice Note / Quick Context (Khmer or English)</label>
+          <div class="flex gap-2">
+            <button type="button" id="record-btn" onclick="toggleVoiceRecording()" class="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded-lg text-xs font-bold flex items-center gap-1.5 transition">
+              <span id="record-icon">🎤</span> <span id="record-label">Record Voice Note</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Audio Playback Preview (Appears automatically after recording) -->
+        <div id="audio-preview-box" class="hidden mb-3 p-2.5 rounded-lg bg-slate-950 border border-emerald-500/30 flex items-center justify-between gap-3">
+          <span class="text-xs text-emerald-400 font-semibold whitespace-nowrap">🎙️ Voice Recorded:</span>
+          <audio id="audio-playback" controls class="h-8 w-full"></audio>
+          <button type="button" onclick="clearVoiceRecording()" class="text-xs text-slate-400 hover:text-rose-400 px-2">✕</button>
+        </div>
+
+        <textarea id="voice-input" rows="2" placeholder="Tap '🎤 Record Voice Note' above to speak in Khmer or English, or type details here..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white"></textarea>
+      </div>
+
+      <input type="hidden" id="demo-type" value="" />
+
+      <button type="submit" id="submit-btn" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition">
+        🚀 Submit Report to Local Authorities
+      </button>
+    </form>
+
+    <!-- Confirmation Banner after Citizen Submits -->
+    <div id="citizen-success" class="hidden mt-6 p-5 rounded-2xl bg-emerald-950/50 border border-emerald-500/40">
+      <h4 class="font-bold text-emerald-300 text-base">✅ Report Analysed & Routed Automatically!</h4>
+      <p id="citizen-routed-msg" class="text-xs text-slate-300 mt-1"></p>
+      <p id="citizen-narrative-preview" class="text-sm text-white bg-slate-900/90 p-3 rounded-lg mt-3 border border-slate-800 italic"></p>
+      <button onclick="openAuthorityGate()" class="mt-4 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">
+        🚓 Switch to Authority Portal to See This Ticket →
+      </button>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- AUTHORITY LOGIN MODAL (Pre-Filled 1-Click Login)          -->
+  <!-- ========================================================= -->
+  <div id="login-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🛡️</span>
+          <h3 class="text-lg font-bold text-white">Authority Portal Sign-In</h3>
+        </div>
+        <button onclick="closeLoginModal()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+
+      <div class="mb-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-xs text-blue-300">
+        💡 <strong>Judge / Demo Mode Active:</strong> Official credentials are pre-filled below for 1-click evaluation.
+      </div>
+
+      <form onsubmit="completeAuthorityLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Jurisdiction / District (Khan)</label>
+          <select id="login-khan" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+            <option value="ALL">All Phnom Penh Districts (Central Command)</option>
+            <option value="Khan Toul Kork">Khan Toul Kork Traffic Police</option>
+            <option value="Khan Daun Penh">Khan Daun Penh Traffic Police</option>
+            <option value="Khan Chamkar Mon">Khan Chamkar Mon Traffic Police</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Officer ID / Email</label>
+          <input type="email" value="dispatch.command@traffic.gov.kh" readonly class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-300" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Security Token</label>
+          <input type="password" value="••••••••••••••" readonly class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-300" />
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg transition">
+          🔐 1-Click Sign In to Command Center
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 3: AUTHORITY COMMAND DASHBOARD (Full Screen)         -->
+  <!-- ========================================================= -->
+  <section id="view-authority" class="hidden max-w-5xl mx-auto px-6 py-10">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8 pb-4 border-b border-slate-800">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">● Live Command Feed</span>
+          <span id="active-jurisdiction-badge" class="text-xs text-slate-400">Jurisdiction: All Phnom Penh Districts</span>
+        </div>
+        <h2 class="text-2xl font-bold text-white mt-1">Authority Incident Triage & Dispatch Queue</h2>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="showView('citizen')" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold">
+          + Simulate New Citizen Report
+        </button>
+        <button onclick="logoutAuthority()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 hover:bg-slate-800 text-xs text-slate-400">
+          Switch District / Sign Out
+        </button>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE GIS MAP -->
+    <div id="gis-map" class="w-full h-64 rounded-2xl border border-slate-800 mb-8 z-10 shadow-xl"></div>
+    <!-- INCIDENT CARDS LIST -->
+    <div id="incidents-container" class="space-y-6"></div>
+  </section>
+
+  <script>
+    let isAuthorityLoggedIn = false;
+    let selectedKhan = "ALL";
+
+    function showView(view) {
+      document.getElementById('view-landing').classList.add('hidden');
+      document.getElementById('view-citizen').classList.add('hidden');
+      document.getElementById('view-authority').classList.add('hidden');
+      document.getElementById(`view-${view}`).classList.remove('hidden');
+      if (view === 'authority') loadIncidents();
+    }
+
+    function openAuthorityGate() {
+      if (isAuthorityLoggedIn) {
+        showView('authority');
+      } else {
+        document.getElementById('login-modal').classList.remove('hidden');
+      }
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').classList.add('hidden');
+    }
+
+    function completeAuthorityLogin(e) {
+      e.preventDefault();
+      isAuthorityLoggedIn = true;
+      selectedKhan = document.getElementById('login-khan').value;
+      document.getElementById('active-jurisdiction-badge').innerText =
+        selectedKhan === 'ALL' ? 'Jurisdiction: All Phnom Penh Districts' : `Jurisdiction: ${selectedKhan}`;
+      closeLoginModal();
+      showView('authority');
+    }
+
+    function logoutAuthority() {
+      isAuthorityLoggedIn = false;
+      openAuthorityGate();
+    }
+
+    function detectGPS() {
+      const gpsInput = document.getElementById('gps-input');
+      gpsInput.value = "Detecting location...";
+      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            gpsInput.value = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
+          },
+          (error) => {
+            alert("Unable to retrieve location. Please ensure location services are enabled.");
+            gpsInput.value = "";
+          }
+        );
+      } else {
+        alert("Geolocation is not supported by your browser.");
+        gpsInput.value = "";
+      }
+    }
+
+    function fillDemo(type) {
+      if (type === 'collision') {
+        document.getElementById('gps-input').value = "Russian Boulevard near RUPP, Khan Toul Kork (11.5681, 104.8921)";
+        document.getElementById('voice-input').value = "Two motorbikes collided in the middle lane during evening rush hour, blocking about 40% of the road.";
+        document.getElementById('demo-type').value = "motorbike_collision";
+      } else {
+        document.getElementById('gps-input').value = "Preah Monivong Blvd near Central Market, Khan Daun Penh (11.5696, 104.9210)";
+        document.getElementById('voice-input').value = "Heavy container truck stalled across two lanes causing severe 75% road blockage.";
+        document.getElementById('demo-type').value = "stalled_truck";
+      }
+    }
+
+    async function submitReport(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.innerText = "🤖 Gemini Agents Analyzing Scene & Generating Narrative...";
+      btn.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('gps', document.getElementById('gps-input').value || "Russian Boulevard, Khan Toul Kork");
+        formData.append('voice_note', document.getElementById('voice-input').value);
+        formData.append('demo_type', document.getElementById('demo-type').value);
+
+        const fileInput = document.getElementById('media-input');
+        if (fileInput.files[0]) {
+          formData.append('media', fileInput.files[0]);
+        }
+        if (recordedAudioBlob) {
+          formData.append('voice_audio', recordedAudioBlob, 'voice_note.webm');
+        }
+
+        const res = await fetch('/api/report', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        document.getElementById('citizen-success').classList.remove('hidden');
+        document.getElementById('citizen-routed-msg').innerText =
+          `Auto-Routed to: ${data.khan} (${data.sangkat}) • Estimated Road Obstruction: ${data.obstruction_percent}%`;
+        document.getElementById('citizen-narrative-preview').innerText = `"${data.narrative_en}"`;
+      } catch (err) {
+        console.error("Submission error:", err);
+      } finally {
+        btn.innerText = "🚀 Submit Report to Local Authorities";
+        btn.disabled = false;
+      }
+    }
+
+    let gisMap = null;
+    let markersLayer = null;
+
+    function initMap() {
+      if (!gisMap) {
+        gisMap = L.map('gis-map').setView([11.5564, 104.9282], 13);
+        // Swapped to the universally free standard OpenStreetMap tiles (No API Key needed)
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(gisMap);
+        markersLayer = L.layerGroup().addTo(gisMap);
+      }
+      setTimeout(() => gisMap.invalidateSize(), 200);
+    }
+
+    async function loadIncidents() {
+      const res = await fetch(`/api/incidents?khan=${encodeURIComponent(selectedKhan)}`, {
+        headers: { 'Authorization': 'Bearer demo-token' }
+      });
+      if (!res.ok) return;
+      
+      const incidents = await res.json();
+      const container = document.getElementById('incidents-container');
+      
+      // Initialize map on first load
+      initMap();
+      markersLayer.clearLayers();
+
+      container.innerHTML = incidents.map(inc => {
+        const isComplete = inc.status === 'Complete';
+        const isScene = inc.status === 'Go to Scene';
+        const badgeColor = isComplete ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
+                           isScene ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                           'bg-rose-500/20 text-rose-300 border-rose-500/40';
+
+        // Add Map Pin
+        if (inc.lat && inc.lon) {
+          const pinColor = isComplete ? '#10b981' : isScene ? '#f59e0b' : '#f43f5e';
+          L.circleMarker([inc.lat, inc.lon], {
+            color: pinColor, fillColor: pinColor, fillOpacity: 0.8, radius: 8
+          }).addTo(markersLayer).bindPopup(`<b style="color:black">${inc.id}</b><br/><span style="color:black">${inc.category}</span>`);
+        }
+
+        // Telemetry Timestamps UI
+        const dispatchUI = inc.dispatch_time ? `<span class="px-2 py-1 bg-amber-500/10 text-amber-400 rounded border border-amber-500/20">⏱️ Dispatched: ${inc.dispatch_time}</span>` : '';
+        const resolveUI = inc.resolve_time ? `<span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">✅ Cleared: ${inc.resolve_time}</span>` : '';
+
+        return `
+          <div class="rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-xl mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-800">
+              <div class="flex items-center gap-3">
+                <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor}">● ${inc.status}</span>
+                <span class="text-sm font-bold text-white">${inc.id}</span>
+                <span class="text-xs text-slate-400">🕒 Reported: ${inc.timestamp}</span>
+              </div>
+              <div class="text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-lg">
+                📍 ${inc.khan}
+              </div>
+            </div>
+
+            <!-- Telemetry Metrics -->
+            ${(dispatchUI || resolveUI) ? `<div class="mt-3 flex gap-2 text-xs font-semibold">${dispatchUI}${resolveUI}</div>` : ''}
+
+            <!-- Intelligence Dashboard -->
+            <div class="mt-4 grid grid-cols-2 gap-3 text-xs">
+              <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <span class="block text-slate-500 font-bold mb-1">🏛️ Dispatched Agency</span>
+                <span class="text-blue-400 font-semibold">${inc.agency || "Pending Assessment"}</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <span class="block text-slate-500 font-bold mb-1">🔍 AI OCR Extraction</span>
+                <span class="text-amber-400 font-mono">${inc.ocr_text || "None"}</span>
+              </div>
+            </div>
+
+            <!-- Narrative -->
+            <div class="mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800">
+              <p class="text-slate-100 text-sm leading-relaxed font-medium">"${inc.narrative_en}"</p>
+              <div class="mt-4 flex items-center gap-4">
+                <div class="flex-1 bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                  <div class="bg-amber-500 h-2.5 rounded-full" style="width: ${inc.obstruction_percent || 0}%"></div>
+                </div>
+                <span class="text-xs font-bold text-amber-400 whitespace-nowrap">🚧 ${inc.obstruction_percent || 0}% Obstruction</span>
+              </div>
+            </div>
+
+            <!-- Workflow Buttons -->
+            <div class="mt-5 flex items-center gap-2">
+              <button onclick="changeStatus('${inc.id}', 'Pending')" class="px-3 py-1.5 rounded-lg text-xs font-bold border ${inc.status === 'Pending' ? 'bg-rose-600 text-white border-rose-500' : 'bg-slate-800 text-slate-400 border-slate-700'}">1. Pending</button>
+              <button onclick="changeStatus('${inc.id}', 'Go to Scene')" class="px-3 py-1.5 rounded-lg text-xs font-bold border ${inc.status === 'Go to Scene' ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-slate-800 text-slate-400 border-slate-700'}">2. 🚓 Go to Scene</button>
+              <button onclick="changeStatus('${inc.id}', 'Complete')" class="px-3 py-1.5 rounded-lg text-xs font-bold border ${inc.status === 'Complete' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-800 text-slate-400 border-slate-700'}">3. ✅ Complete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function changeStatus(id, status) {
+      await fetch(`/api/incidents/${id}/status`, {
+        method: 'PATCH',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer demo-token' // Auth header[cite: 6]
+        },
+        body: JSON.stringify({ status })
+      });
+      loadIncidents();
+    }
+
+    function speakNarrative(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedAudioBlob = null;
+    let isRecording = false;
+    let recognition = null;
+
+    async function toggleVoiceRecording() {
+      const btn = document.getElementById('record-btn');
+      const label = document.getElementById('record-label');
+      const icon = document.getElementById('record-icon');
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioUrl = URL.createObjectURL(recordedAudioBlob);
+            document.getElementById('audio-playback').src = audioUrl;
+            document.getElementById('audio-preview-box').classList.remove('hidden');
+            stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          btn.className = "px-3 py-1.5 bg-rose-600 text-white border border-rose-400 rounded-lg text-xs font-bold flex items-center gap-1.5 animate-pulse";
+          icon.innerText = "⏹️";
+          label.innerText = "Stop Recording...";
+
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.onresult = (event) => {
+              let transcript = '';
+              for (let i = 0; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+              }
+              document.getElementById('voice-input').value = transcript;
+            };
+            recognition.start();
+          }
+        } catch (err) {
+          alert("Microphone access denied or unavailable. Please check your browser permissions to use the voice note feature.");
+          isRecording = false;
+        }
+      } else {
+        if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+        if (recognition) recognition.stop();
+        isRecording = false;
+        btn.className = "px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded-lg text-xs font-bold flex items-center gap-1.5 transition";
+        icon.innerText = "🎤";
+        label.innerText = "Re-Record Voice";
+      }
+    }
+
+    function clearVoiceRecording() {
+      recordedAudioBlob = null;
+      document.getElementById('audio-preview-box').classList.add('hidden');
+      document.getElementById('record-label').innerText = "Record Voice Note";
+    }
+  </script>
+</body>
+</html>
